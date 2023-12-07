@@ -9,6 +9,7 @@ import { useSignMessage } from 'wagmi'
 import * as dotenv from 'dotenv'
 dotenv.config({ path: '../../.env.local' });
 import { ethers } from 'ethers'
+import Diamond from '@niftykit/diamond';
 
 
 const API_KEY = process.env.NEXT_PUBLIC_SOCKET_TEST_API;
@@ -240,7 +241,34 @@ async function socketSwap() {
 
 }
 
-socketSwap();
+// socketSwap();
+// import { ethers } from 'ethers';
+// import Diamond from '@niftykit/diamond';
+// const provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+
+async function niftyMint(){
+  const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+
+  // Prompt user for account connections
+  await provider.send("eth_requestAccounts", []);
+
+  // Stores signer
+  const signer = provider.getSigner();
+
+  const diamond = await Diamond.create(signer, process.env.NEXT_PUBLIC_NIFTYKIT_API);
+  // minter
+  const recipient = await signer.getAddress();
+  // get current price
+  const price = await diamond.apps.drop.price();
+  // mint 1 NFT
+  const tx = await diamond.apps.drop.mintTo(recipient, 1, {
+    value: price,
+  });
+  await tx.wait();
+}
+
+niftyMint();
+
 
 export default function Home() {
   return (
